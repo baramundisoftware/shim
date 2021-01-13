@@ -127,7 +127,7 @@ start_image(EFI_HANDLE image_handle, UINTN *exit_data_size, CHAR16 **exit_data)
 			EFI_STATUS status2 = install_shim_protocols();
 
 			if (EFI_ERROR(status2)) {
-				Print(L"Something has gone seriously wrong: %d\n",
+				Print(L"Something has gone seriously wrong: 0x%x\n",
 					status2);
 				Print(L"shim cannot continue, sorry.\n");
 				systab->BootServices->Stall(5000000);

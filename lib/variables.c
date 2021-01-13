@@ -147,7 +147,7 @@ SetSecureVariable(CHAR16 *var, UINT8 *Data, UINTN len, EFI_GUID owner,
 		efi_status = variable_create_esl(Data, len, &X509_GUID, NULL,
 						 (void **)&Cert, &ds);
 		if (efi_status != EFI_SUCCESS) {
-			Print(L"Failed to create %s certificate %d\n", var, efi_status);
+			Print(L"Failed to create %s certificate 0x%x\n", var, efi_status);
 			return efi_status;
 		}
 
@@ -159,7 +159,7 @@ SetSecureVariable(CHAR16 *var, UINT8 *Data, UINTN len, EFI_GUID owner,
 	}
 	efi_status = CreateTimeBasedPayload(&DataSize, (UINT8 **)&Cert);
 	if (efi_status != EFI_SUCCESS) {
-		Print(L"Failed to create time based payload %d\n", efi_status);
+		Print(L"Failed to create time based payload 0x%x\n", efi_status);
 		return efi_status;
 	}
 

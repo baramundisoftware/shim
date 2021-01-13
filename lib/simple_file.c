@@ -28,14 +28,14 @@ simple_file_open_by_handle(EFI_HANDLE device, CHAR16 *name, EFI_FILE **file, UIN
 				       &SIMPLE_FS_PROTOCOL, (void **)&drive);
 
 	if (efi_status != EFI_SUCCESS) {
-		Print(L"Unable to find simple file protocol (%d)\n", efi_status);
+		Print(L"Unable to find simple file protocol (0x%x)\n", efi_status);
 		goto error;
 	}
 
 	efi_status = uefi_call_wrapper(drive->OpenVolume, 2, drive, &root);
 
 	if (efi_status != EFI_SUCCESS) {
-		Print(L"Failed to open drive volume (%d)\n", efi_status);
+		Print(L"Failed to open drive volume (0x%x)\n", efi_status);
 		goto error;
 	}
 
@@ -140,7 +140,7 @@ simple_dir_read_all(EFI_HANDLE image, CHAR16 *name, EFI_FILE_INFO **entries,
 
 	status = simple_file_open(image, name, &file, EFI_FILE_MODE_READ);
 	if (status != EFI_SUCCESS) {
-		Print(L"failed to open file %s: %d\n", name, status);
+		Print(L"failed to open file %s: 0x%x\n", name, status);
 		return status;
 	}
 
@@ -169,7 +169,7 @@ simple_file_read_all(EFI_FILE *file, UINTN *size, void **buffer)
 
 	*buffer = AllocatePool(*size);
 	if (!*buffer) {
-		Print(L"Failed to allocate buffer of size %d\n", *size);
+		Print(L"Failed to allocate buffer of size 0x%x\n", *size);
 		return EFI_OUT_OF_RESOURCES;
 	}
 	efi_status = uefi_call_wrapper(file->Read, 3, file, size, *buffer);

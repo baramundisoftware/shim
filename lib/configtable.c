@@ -46,7 +46,7 @@ configtable_find_image(const EFI_DEVICE_PATH *DevicePath)
 	int i;
 	for (i = 0; i < entries; i++) {
 #ifdef DEBUG_CONFIG
-		Print(L"InfoSize = %d  Action = %d\n", e->InfoSize, e->Action);
+		Print(L"InfoSize = 0x%x  Action = 0x%x\n", e->InfoSize, e->Action);
 
 		/* print what we have for debugging */
 		UINT8 *d = (UINT8 *)e; // + sizeof(UINT32)*2;
@@ -77,7 +77,7 @@ configtable_find_image(const EFI_DEVICE_PATH *DevicePath)
 		if (name[0] == '\0' || (e->Data[1] == 0 && e->Data[3] == 0)) {
 			skip = StrSize(name);
 #ifdef DEBUG_CONFIG
-			Print(L"FOUND NAME %s (%d)\n", name, skip);
+			Print(L"FOUND NAME %s (0x%x)\n", name, skip);
 #endif
 		}
 		EFI_DEVICE_PATH *dp = (EFI_DEVICE_PATH *)(e->Data + skip), *dpn = dp;
@@ -92,7 +92,7 @@ configtable_find_image(const EFI_DEVICE_PATH *DevicePath)
 		DevicePathInstance(&dpn, &Size);
 #ifdef DEBUG_CONFIG
 		Print(L"Path: %s\n", DevicePathToStr(dp));
-		Print(L"Device Path Size %d\n", Size);
+		Print(L"Device Path Size 0x%x\n", Size);
 #endif
 		if (Size > e->InfoSize) {
 			/* parse error; the platform obviously has a 

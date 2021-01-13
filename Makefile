@@ -6,11 +6,11 @@ ARCH		= $(shell $(CC) -dumpmachine | cut -f1 -d- | sed s,i[3456789]86,ia32,)
 
 SUBDIRS		= Cryptlib lib
 
-LIB_PATH	= /usr/lib64
+#LIB_PATH	= /usr/lib64
 
 EFI_INCLUDE	:= /usr/include/efi
 EFI_INCLUDES	= -nostdinc -ICryptlib -ICryptlib/Include -I$(EFI_INCLUDE) -I$(EFI_INCLUDE)/$(ARCH) -I$(EFI_INCLUDE)/protocol -Iinclude
-EFI_PATH	:= /usr/lib64/gnuefi
+#EFI_PATH	:= /usr/lib64/gnuefi
 
 LIB_GCC		= $(shell $(CC) -print-libgcc-file-name)
 EFI_LIBS	= -lefi -lgnuefi --start-group Cryptlib/libcryptlib.a Cryptlib/OpenSSL/libopenssl.a --end-group $(LIB_GCC) 

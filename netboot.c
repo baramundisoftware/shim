@@ -259,7 +259,23 @@ static BOOLEAN extract_tftp_info(CHAR8 *url)
 
 static EFI_STATUS parseDhcp6()
 {
-	EFI_PXE_BASE_CODE_DHCPV6_PACKET *packet = (EFI_PXE_BASE_CODE_DHCPV6_PACKET *)&pxe->Mode->DhcpAck.Raw;
+	// Notice: in the default implementation the dhcpack-packet is used.
+	// We use instead the proxyoffer-packet because it allways contains the
+	// correct data. Dhcpack does not provide the correct bootserver as well as the
+	// correct bootfilename in case of a available pxe-server.
+	// See bblefi / grub2 for further information.
+
+	EFI_PXE_BASE_CODE_DHCPV6_PACKET *packet;
+
+	if (pxe->Mode->ProxyOfferReceived)
+	{
+		packet = (EFI_PXE_BASE_CODE_DHCPV6_PACKET *)&pxe->Mode->ProxyOffer.Raw;
+	}
+	else
+	{
+		packet = (EFI_PXE_BASE_CODE_DHCPV6_PACKET *)&pxe->Mode->DhcpAck.Raw;
+	}
+
 	CHAR8 *bootfile_url;
 
 	bootfile_url = get_v6_bootfile_url(packet);
@@ -275,13 +291,32 @@ static EFI_STATUS parseDhcp6()
 
 static EFI_STATUS parseDhcp4()
 {
-	CHAR8 *template = (CHAR8 *)translate_slashes(DEFAULT_LOADER_CHAR);
+	// Notice: in the default implementation the dhcpack-packet is used.
+	// We use instead the proxyoffer-packet because it allways contains the
+	// correct data. Dhcpack does not provide the correct bootserver as well as the
+	// correct bootfilename in case of a available pxe-server.
+	// See bblefi / grub2 for further information.
+
+	CHAR8 *template = (CHAR8 *) translate_slashes(DEFAULT_LOADER_CHAR);
 	INTN template_len = strlen(template) + 1;
+	UINT8* bootpSiAddr;
+	INTN dir_len;
+	UINT8 *dir;
 
-	INTN dir_len = strnlena(pxe->Mode->DhcpAck.Dhcpv4.BootpBootFile, 127);
+	if (pxe->Mode->ProxyOfferReceived)
+	{
+		bootpSiAddr = pxe->Mode->ProxyOffer.Dhcpv4.BootpSiAddr;
+		dir_len = strnlena(pxe->Mode->ProxyOffer.Dhcpv4.BootpBootFile, 127);
+		dir = pxe->Mode->ProxyOffer.Dhcpv4.BootpBootFile;
+	}
+	else
+	{
+		bootpSiAddr = pxe->Mode->DhcpAck.Dhcpv4.BootpSiAddr;
+		dir_len = strnlena(pxe->Mode->DhcpAck.Dhcpv4.BootpBootFile, 127);
+		dir = pxe->Mode->DhcpAck.Dhcpv4.BootpBootFile;
+	}
+
 	INTN i;
-	UINT8 *dir = pxe->Mode->DhcpAck.Dhcpv4.BootpBootFile;
-
 	for (i = dir_len; i >= 0; i--) {
 		if (dir[i] == '/')
 			break;
@@ -295,13 +330,13 @@ static EFI_STATUS parseDhcp4()
 
 	if (dir_len > 0) {
 		strncpya(full_path, dir, dir_len);
-		if (full_path[dir_len-1] == '/' && template[0] == '/')
-			full_path[dir_len-1] = '\0';
+		if (full_path[dir_len - 1] == '/' && template[0] == '/')
+			full_path[dir_len - 1] = '\0';
 	}
 	if (dir_len == 0 && dir[0] != '/' && template[0] == '/')
 		template++;
 	strcata(full_path, template);
-	memcpy(&tftp_addr.v4, pxe->Mode->DhcpAck.Dhcpv4.BootpSiAddr, 4);
+	memcpy(&tftp_addr.v4, bootpSiAddr, 4);
 
 	return EFI_SUCCESS;
 }
@@ -333,7 +368,7 @@ EFI_STATUS FetchNetbootimage(EFI_HANDLE image_handle, VOID **buffer, UINT64 *buf
 	EFI_PXE_BASE_CODE_TFTP_OPCODE read = EFI_PXE_BASE_CODE_TFTP_READ_FILE;
 	BOOLEAN overwrite = FALSE;
 	BOOLEAN nobuffer = FALSE;
-	UINTN blksz = 512;
+	UINTN blksz = 1456;
 
 	Print(L"Fetching Netboot Image\n");
 	if (*buffer == NULL) {

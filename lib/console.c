@@ -4,8 +4,8 @@
  *
  * see COPYING file
  */
-#include <efi/efi.h>
-#include <efi/efilib.h>
+#include <efi.h>
+#include <efilib.h>
 
 #include <console.h>
 #include <variables.h>
@@ -85,7 +85,7 @@ console_print_box_at(CHAR16 *str_arr[], int highlight, int start_col, int start_
 		start_row = 0;
 
 	if (start_col > cols || start_row > rows) {
-		Print(L"Starting Position (%d,%d) is off screen\n",
+		Print(L"Starting Position (0x%x,0x%x) is off screen\n",
 		      start_col, start_row);
 		return;
 	}
@@ -270,6 +270,8 @@ console_select(CHAR16 *title[], CHAR16* selectors[], int start)
 	} while (!(k.ScanCode == SCAN_NULL
 		   && k.UnicodeChar == CHAR_CARRIAGE_RETURN));
 
+	console_reset();
+
 	uefi_call_wrapper(co->EnableCursor, 2, co, SavedConsoleMode.CursorVisible);
 	uefi_call_wrapper(co->SetCursorPosition, 3, co, SavedConsoleMode.CursorColumn, SavedConsoleMode.CursorRow);
 	uefi_call_wrapper(co->SetAttribute, 2, co, SavedConsoleMode.Attribute);
@@ -370,7 +372,7 @@ err_string (
     IN EFI_STATUS       Status
     )
 {
-	UINTN           Index;
+	UINTN Index;
 
 	for (Index = 0; error_table[Index].Desc; Index +=1) {
 		if (error_table[Index].Code == Status) {
@@ -393,7 +395,7 @@ console_error(CHAR16 *err, EFI_STATUS status)
 	};
 	CHAR16 str[512];
 
-	SPrint(str, sizeof(str), L"%s: (%d) %s", err, status, err_string(status));
+	SPrint(str, sizeof(str), L"%s: (0x%x) %s", err, status, err_string(status));
 
 	err_arr[2] = str;
 
