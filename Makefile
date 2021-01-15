@@ -57,38 +57,17 @@ LDFLAGS		= -nostdlib -znocombreloc -T $(EFI_LDS) -shared -Bsymbolic -L$(EFI_PATH
 
 VERSION		= 0.8
 
-TARGET	= shim.efi MokManager.efi.signed fallback.efi.signed
+TARGET	= shim.efi
 OBJS	= shim.o netboot.o cert.o replacements.o version.o
-KEYS	= shim_cert.h ocsp.* ca.* shim.crt shim.csr shim.p12 shim.pem shim.key shim.cer
 SOURCES	= shim.c shim.h netboot.c include/PeImage.h include/wincert.h include/console.h replacements.c replacements.h version.c version.h
-MOK_OBJS = MokManager.o PasswordCrypt.o crypt_blowfish.o
-MOK_SOURCES = MokManager.c shim.h include/console.h PasswordCrypt.c PasswordCrypt.h crypt_blowfish.c crypt_blowfish.h
-FALLBACK_OBJS = fallback.o
-FALLBACK_SRCS = fallback.c
 
 all: $(TARGET)
-
-shim.crt:
-	./make-certs shim shim@xn--u4h.net all codesign 1.3.6.1.4.1.311.10.3.1 </dev/null
-
-shim.cer: shim.crt
-	openssl x509 -outform der -in $< -out $@
-
-shim_cert.h: shim.cer
-	echo "static UINT8 shim_cert[] = {" > $@
-	hexdump -v -e '1/1 "0x%02x, "' $< >> $@
-	echo "};" >> $@
 
 version.c : version.c.in
 	sed	-e "s,@@VERSION@@,$(VERSION)," \
 		-e "s,@@UNAME@@,$(shell uname -a)," \
 		-e "s,@@COMMIT@@,$(shell if [ -d .git ] ; then git log -1 --pretty=format:%H ; elif [ -f commit ]; then cat commit ; else echo commit id not available; fi)," \
 		< version.c.in > version.c
-
-certdb/secmod.db: shim.crt
-	-mkdir certdb
-	pk12util -d certdb/ -i shim.p12 -W "" -K ""
-	certutil -d certdb/ -A -i shim.crt -n shim -t u
 
 shim.o: $(SOURCES)
 
@@ -97,16 +76,6 @@ cert.o : cert.S
 
 shim.so: $(OBJS) Cryptlib/libcryptlib.a Cryptlib/OpenSSL/libopenssl.a lib/lib.a
 	$(LD) -o $@ $(LDFLAGS) $^ $(EFI_LIBS)
-
-fallback.o: $(FALLBACK_SRCS)
-
-fallback.so: $(FALLBACK_OBJS) Cryptlib/libcryptlib.a Cryptlib/OpenSSL/libopenssl.a lib/lib.a
-	$(LD) -o $@ $(LDFLAGS) $^ $(EFI_LIBS)
-
-MokManager.o: $(MOK_SOURCES)
-
-MokManager.so: $(MOK_OBJS) Cryptlib/libcryptlib.a Cryptlib/OpenSSL/libopenssl.a lib/lib.a
-	$(LD) -o $@ $(LDFLAGS) $^ $(EFI_LIBS) lib/lib.a
 
 Cryptlib/libcryptlib.a:
 	$(MAKE) -C Cryptlib
@@ -144,14 +113,11 @@ FORMAT		?= --target efi-app-$(ARCH)
 		-j .debug_line -j .debug_str -j .debug_ranges \
 		$(FORMAT) $^ $@.debug
 
-%.efi.signed: %.efi certdb/secmod.db
-	pesign -n certdb -i $< -c "shim" -s -o $@ -f
-
 clean:
 	$(MAKE) -C Cryptlib clean
 	$(MAKE) -C Cryptlib/OpenSSL clean
 	$(MAKE) -C lib clean
-	rm -rf $(TARGET) $(OBJS) $(MOK_OBJS) $(FALLBACK_OBJS) $(KEYS) certdb
+	rm -rf $(TARGET) $(OBJS)
 	rm -f *.debug *.so *.efi *.tar.* version.c
 
 GITTAG = $(VERSION)
