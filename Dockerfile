@@ -24,3 +24,5 @@ RUN LIB_PATH=/usr/lib32 \
 	&& make -C /shim_source clean \
 	&& make -C /shim_source shim.efi CC=gcc-4.8 ARCH=ia32 EFI_PATH=/usr/lib32 DEFAULT_LOADER=bblefi-x86/grub2_x86.efi VENDOR_CERT_FILE=bsAG_EV_productive_2020.cer \
 	&& cp /shim_source/shim.efi ./shim_x86.efi
+
+WORKDIR /

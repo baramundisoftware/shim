@@ -39,7 +39,6 @@
 #include "PeImage.h"
 #include "shim.h"
 #include "netboot.h"
-#include "shim_cert.h"
 #include "replacements.h"
 #include "ucs2.h"
 
@@ -887,18 +886,6 @@ static EFI_STATUS verify_buffer (char *data, int datasize,
 		return status;
 
 	if (cert) {
-		/*
-		 * Check against the shim build key
-		 */
-		if (sizeof(shim_cert) &&
-		    AuthenticodeVerify(cert->CertData,
-			       context->SecDir->Size - sizeof(cert->Hdr),
-			       shim_cert, sizeof(shim_cert), sha256hash,
-			       SHA256_DIGEST_SIZE)) {
-			status = EFI_SUCCESS;
-			return status;
-		}
-
 		/*
 		 * And finally, check against shim's built-in key
 		 */

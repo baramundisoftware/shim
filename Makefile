@@ -90,7 +90,7 @@ certdb/secmod.db: shim.crt
 	pk12util -d certdb/ -i shim.p12 -W "" -K ""
 	certutil -d certdb/ -A -i shim.crt -n shim -t u
 
-shim.o: $(SOURCES) shim_cert.h
+shim.o: $(SOURCES)
 
 cert.o : cert.S
 	$(CC) $(CFLAGS) -c -o $@ $<
